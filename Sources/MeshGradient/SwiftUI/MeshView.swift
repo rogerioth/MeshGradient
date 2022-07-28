@@ -19,7 +19,7 @@ import SwiftUI
 #if canImport(UIKit)
 import UIKit
 
-public struct MeshGradient: UIViewRepresentable {
+public struct MeshView: UIViewRepresentable {
 	
 	private let state: MeshGradientState
 	private let subdivisions: Int
@@ -102,7 +102,7 @@ public struct MeshGradient: UIViewRepresentable {
 
 import AppKit
 
-public struct AnimatableMeshGradient: NSViewRepresentable {
+public struct MeshView: NSViewRepresentable {
 	
 	private let state: MeshGradientState
 	private let subdivisions: Int
