@@ -48,6 +48,7 @@ public struct Grid<Element> {
 	}
 }
 
+extension Grid: Codable where Element: Codable {}
 extension Grid: Equatable where Element: Equatable {}
 extension Grid: Hashable where Element: Hashable {}
 

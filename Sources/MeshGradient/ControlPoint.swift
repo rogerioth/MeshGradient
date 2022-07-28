@@ -4,7 +4,7 @@ import simd
 import SwiftUI
 
 /// Describes one mesh gradient entry in matrix.
-public struct ControlPoint {
+public struct ControlPoint: Codable {
     
 	/// Color of the control point
     public var color: simd_float3
