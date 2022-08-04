@@ -44,7 +44,8 @@ public struct MeshView: UIViewRepresentable {
 	
 	public func makeUIView(context: Context) -> MTKView {
 		let view = MTKView(frame: .zero, device: MTLCreateSystemDefaultDevice())
-        context.coordinator.renderer = .init(metalKitView: view, meshDataProvider: createDataProvider(), grainAlpha: grainAlpha, subdivisions: subdivisions)
+        let dataProvider = createDataProvider()
+        context.coordinator.renderer = .init(metalKitView: view, meshDataProvider: dataProvider, grainAlpha: grainAlpha, subdivisions: subdivisions)
 		
 		switch state {
 		case .animated:
@@ -56,7 +57,7 @@ public struct MeshView: UIViewRepresentable {
 		}
 		
 		view.delegate = context.coordinator.renderer
-		view.preferredFramesPerSecond = 60
+        view.preferredFramesPerSecond = (dataProvider as? MeshAnimator)?.configuration.framesPerSecond ?? 60
 		return view
 	}
 	
@@ -77,12 +78,14 @@ public struct MeshView: UIViewRepresentable {
 			}
 			animator.configuration = animatorConfiguration
 			animator.configuration.framesPerSecond = min(animatorConfiguration.framesPerSecond, view.preferredFramesPerSecond)
+            view.preferredFramesPerSecond = animator.configuration.framesPerSecond
 		case .static(let grid):
 			guard let staticMesh = context.coordinator.renderer.meshDataProvider as? StaticMeshDataProvider else {
 				fatalError("Incorrect mesh data provider type. Expected \(StaticMeshDataProvider.self), got \(type(of: context.coordinator.renderer.meshDataProvider))")
 			}
 			staticMesh.grid = grid
 			view.setNeedsDisplay()
+            view.preferredFramesPerSecond = 60
 		}
 		context.coordinator.renderer.mtkView(view, drawableSizeWillChange: view.drawableSize)
 		context.coordinator.renderer.subdivisions = subdivisions
@@ -128,7 +131,8 @@ public struct MeshView: NSViewRepresentable {
 	
 	public func makeNSView(context: Context) -> MTKView {
 		let view = MTKView(frame: .zero, device: MTLCreateSystemDefaultDevice())
-		context.coordinator.renderer = .init(metalKitView: view, meshDataProvider: createDataProvider(), grainAlpha: grainAlpha, subdivisions: subdivisions)
+        let dataProvider = createDataProvider()
+		context.coordinator.renderer = .init(metalKitView: view, meshDataProvider: dataProvider, grainAlpha: grainAlpha, subdivisions: subdivisions)
 		
 		switch state {
 		case .animated:
@@ -140,7 +144,7 @@ public struct MeshView: NSViewRepresentable {
 		}
 		
 		view.delegate = context.coordinator.renderer
-		view.preferredFramesPerSecond = 60
+        view.preferredFramesPerSecond = (dataProvider as? MeshAnimator)?.configuration.framesPerSecond ?? 60
 		return view
 	}
 	
@@ -161,12 +165,14 @@ public struct MeshView: NSViewRepresentable {
 			}
 			animator.configuration = animatorConfiguration
 			animator.configuration.framesPerSecond = min(animatorConfiguration.framesPerSecond, view.preferredFramesPerSecond)
+            view.preferredFramesPerSecond = animator.configuration.framesPerSecond
 		case .static(let grid):
 			guard let staticMesh = context.coordinator.renderer.meshDataProvider as? StaticMeshDataProvider else {
 				fatalError("Incorrect mesh data provider type. Expected \(StaticMeshDataProvider.self), got \(type(of: context.coordinator.renderer.meshDataProvider))")
 			}
 			staticMesh.grid = grid
 			view.setNeedsDisplay(view.bounds)
+            view.preferredFramesPerSecond = 60
 		}
 		context.coordinator.renderer.mtkView(view, drawableSizeWillChange: view.drawableSize)
 		context.coordinator.renderer.subdivisions = subdivisions
