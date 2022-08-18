@@ -15,18 +15,18 @@ public final class MetalMeshRenderer: NSObject, MTKViewDelegate {
     var computeMeshTrianglePrimitives: MTLComputeMeshTrianglePrimitivesFunction?
     var drawMesh: MTLDrawMeshTrianglesFunction?
     
-	var viewportSize: vector_float2 = .zero
-	
-	var subdivisions: Int
+    var viewportSize: vector_float2 = .zero
+    var subdivisions: Int
     var grainAlpha: Float
-	let meshDataProvider: MeshDataProvider
-	
-    public init(metalKitView mtkView: MTKView, meshDataProvider: MeshDataProvider, grainAlpha: Float, subdivisions: Int = 18) {
+    let meshDataProvider: MeshDataProvider
+
+    public init(metalKitView mtkView: MTKView?, meshDataProvider: MeshDataProvider, viewportSize: vector_float2 = .zero, grainAlpha: Float, subdivisions: Int = 18) {
+        self.viewportSize = viewportSize
 		self.subdivisions = subdivisions
         self.grainAlpha = grainAlpha
 		self.meshDataProvider = meshDataProvider
 		
-		guard let device = mtkView.device,
+        guard let device = mtkView?.device ?? MTLCreateSystemDefaultDevice(),
 			  let defaultLibrary = try? device.makeDefaultLibrary(bundle: .module)
 		else {
 			assertionFailure()
@@ -37,11 +37,14 @@ public final class MetalMeshRenderer: NSObject, MTKViewDelegate {
         let bufferPool = MTLBufferPool(device: device)
 		
 		do {
-            computeNoiseFunction = try .init(device: device, library: defaultLibrary)
             computeShuffleCoefficients = try .init(device: device, library: defaultLibrary, bufferPool: bufferPool)
             computeHermitPatchMatrix = try .init(device: device, library: defaultLibrary)
             computeMeshTrianglePrimitives = try .init(device: device, library: defaultLibrary)
-            drawMesh = try .init(device: device, library: defaultLibrary, mtkView: mtkView)
+            drawMesh = try .init(device: device, library: defaultLibrary, pixelFormat: mtkView?.colorPixelFormat ?? .bgra8Unorm)
+
+            if grainAlpha != 0 {
+                computeNoiseFunction = try .init(device: device, library: defaultLibrary)
+            }
             
 		} catch {
 			assertionFailure(error.localizedDescription)
@@ -123,39 +126,64 @@ public final class MetalMeshRenderer: NSObject, MTKViewDelegate {
 	}
 	
     public func draw(in view: MTKView) {
+        draw(pixelFormat: view.colorPixelFormat,
+             renderPassDescriptor: view.currentRenderPassDescriptor,
+             currentDrawable: view.currentDrawable)
+    }
+
+    public func draw(pixelFormat: MTLPixelFormat,
+                     renderPassDescriptor: MTLRenderPassDescriptor?,
+                     currentDrawable: CAMetalDrawable?,
+                     completion: ((MTLTexture?) -> Void)? = nil) {
+
         guard let commandQueue = commandQueue,
-              let commandBuffer = commandQueue.makeCommandBuffer(),
-              let computeNoise = self.computeNoiseFunction
-		else { return }
-		let grid = meshDataProvider.grid
+              let commandBuffer = commandQueue.makeCommandBuffer()
+        else { return }
+        let grid = meshDataProvider.grid
+
+        var noiseTexture: MTLTexture?
+        if let computeNoise = self.computeNoiseFunction {
+            noiseTexture = computeNoise.call(viewportSize: viewportSize,
+                                                 pixelFormat: pixelFormat,
+                                                 commandQueue: commandQueue,
+                                                 uniforms: .init(isSmooth: 1,
+                                                                 color1: 94,
+                                                                 color2: 168,
+                                                                 color3: 147,
+                                                                 noiseAlpha: grainAlpha))
+
+        }
         
-        let noiseTexture = computeNoise.call(viewportSize: viewportSize,
-                                             pixelFormat: view.colorPixelFormat,
-                                             commandQueue: commandQueue,
-                                             uniforms: .init(isSmooth: 1,
-                                                             color1: 94,
-                                                             color2: 168,
-                                                             color3: 147,
-                                                             noiseAlpha: grainAlpha))
-		
-		guard let (resultBuffer, _, resultElementsCount) = calculateTriangles(grid: grid, subdivisions: subdivisions, commandBuffer: commandBuffer),
+        guard let (resultBuffer, _, resultElementsCount) = calculateTriangles(grid: grid, subdivisions: subdivisions, commandBuffer: commandBuffer),
               let drawMesh = self.drawMesh
-		else { assertionFailure(); return }
+        else { assertionFailure(); return }
         
-        drawMesh.call(meshVertices: resultBuffer,
-                      noise: noiseTexture,
-                      meshVerticesCount: resultElementsCount,
-                      view: view,
-                      commandBuffer: commandBuffer,
-                      viewportSize: viewportSize)
+        if let renderPassDescriptor {
+            drawMesh.call(meshVertices: resultBuffer,
+                          noise: noiseTexture,
+                          meshVerticesCount: resultElementsCount,
+                          renderPassDescriptor: renderPassDescriptor,
+                          commandBuffer: commandBuffer,
+                          viewportSize: viewportSize)
+        } else {
+            assertionFailure()
+        }
+
+        if let currentDrawable {
+            commandBuffer.present(currentDrawable)
+        }
+
+        if let texture = currentDrawable?.texture {
+            commandBuffer.addCompletedHandler { _ in
+                completion?(texture)
+            }
+        } else {
+            assertionFailure()
+        }
         
-        if let drawable = view.currentDrawable {
-			commandBuffer.present(drawable)
-		}
-		
-		commandBuffer.commit()
-	}
-	
+        commandBuffer.commit()
+    }
+    
 	func unwrap<Element>(buffer: MTLBuffer, length: Int? = nil, elementsCount: Int) -> [Element] {
 		let rawPointer = buffer.contents()
 		let length = length ?? MemoryLayout<Element>.stride * elementsCount

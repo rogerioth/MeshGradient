@@ -8,9 +8,18 @@ public enum MeshGradientDefaults {
 	public static let subdivisions: Int = 18
 }
 
-private enum MeshGradientState {
+public enum MeshGradientState {
 	case animated(initial: Grid<ControlPoint>, animatorConfiguration: MeshAnimator.Configuration)
 	case `static`(grid: Grid<ControlPoint>)
+
+    public func createDataProvider() -> MeshDataProvider {
+        switch self {
+        case .animated(let initial, let animatorConfiguration):
+            return MeshAnimator(grid: initial, configuration: animatorConfiguration)
+        case .static(let grid):
+            return StaticMeshDataProvider(grid: grid)
+        }
+    }
 }
 
 #if canImport(SwiftUI)
@@ -44,7 +53,7 @@ public struct MeshView: UIViewRepresentable {
 	
 	public func makeUIView(context: Context) -> MTKView {
 		let view = MTKView(frame: .zero, device: MTLCreateSystemDefaultDevice())
-        let dataProvider = createDataProvider()
+        let dataProvider = state.createDataProvider()
         context.coordinator.renderer = .init(metalKitView: view, meshDataProvider: dataProvider, grainAlpha: grainAlpha, subdivisions: subdivisions)
 		
 		switch state {
@@ -59,15 +68,6 @@ public struct MeshView: UIViewRepresentable {
 		view.delegate = context.coordinator.renderer
         view.preferredFramesPerSecond = (dataProvider as? MeshAnimator)?.configuration.framesPerSecond ?? 60
 		return view
-	}
-	
-	private func createDataProvider() -> MeshDataProvider {
-		switch state {
-		case .animated(let initial, let animatorConfiguration):
-			return MeshAnimator(grid: initial, configuration: animatorConfiguration)
-		case .static(let grid):
-			return StaticMeshDataProvider(grid: grid)
-		}
 	}
 	
 	public func updateUIView(_ view: MTKView, context: Context) {
@@ -131,7 +131,7 @@ public struct MeshView: NSViewRepresentable {
 	
 	public func makeNSView(context: Context) -> MTKView {
 		let view = MTKView(frame: .zero, device: MTLCreateSystemDefaultDevice())
-        let dataProvider = createDataProvider()
+        let dataProvider = state.createDataProvider()
 		context.coordinator.renderer = .init(metalKitView: view, meshDataProvider: dataProvider, grainAlpha: grainAlpha, subdivisions: subdivisions)
 		
 		switch state {
@@ -146,15 +146,6 @@ public struct MeshView: NSViewRepresentable {
 		view.delegate = context.coordinator.renderer
         view.preferredFramesPerSecond = (dataProvider as? MeshAnimator)?.configuration.framesPerSecond ?? 60
 		return view
-	}
-	
-	private func createDataProvider() -> MeshDataProvider {
-		switch state {
-		case .animated(let initial, let animatorConfiguration):
-			return MeshAnimator(grid: initial, configuration: animatorConfiguration)
-		case .static(let grid):
-			return StaticMeshDataProvider(grid: grid)
-		}
 	}
 	
 	public func updateNSView(_ view: MTKView, context: Context) {

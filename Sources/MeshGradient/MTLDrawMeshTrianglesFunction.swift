@@ -9,7 +9,7 @@ final class MTLDrawMeshTrianglesFunction {
     
     private let pipelineState: MTLRenderPipelineState
     
-    init(device: MTLDevice, library: MTLLibrary, mtkView: MTKView) throws {
+    init(device: MTLDevice, library: MTLLibrary, pixelFormat: MTLPixelFormat) throws {
         guard let prepareToDrawFunction = library.makeFunction(name: "prepareToDrawShader")
         else { throw MeshGradientError.metalFunctionNotFound(name: "prepareToDrawShader") }
         
@@ -20,7 +20,7 @@ final class MTLDrawMeshTrianglesFunction {
         pipelineDescriptor.label = "Draw mesh pipeline"
         pipelineDescriptor.vertexFunction = prepareToDrawFunction
         pipelineDescriptor.fragmentFunction = drawMeshFunction
-        pipelineDescriptor.colorAttachments[0].pixelFormat = mtkView.colorPixelFormat
+        pipelineDescriptor.colorAttachments[0].pixelFormat = pixelFormat
         
         self.pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
     }
@@ -28,13 +28,12 @@ final class MTLDrawMeshTrianglesFunction {
     func call(meshVertices: MTLBuffer,
               noise: MTLTexture?,
               meshVerticesCount: Int,
-              view: MTKView,
+              renderPassDescriptor: MTLRenderPassDescriptor,
               commandBuffer: MTLCommandBuffer,
               viewportSize: simd_float2) {
         
         assert(meshVerticesCount.isMultiple(of: 3))
-        guard let renderPassDescriptor = view.currentRenderPassDescriptor,
-              let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
+        guard let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
         else {
             assertionFailure()
             return
