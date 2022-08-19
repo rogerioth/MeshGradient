@@ -33,26 +33,32 @@ public struct MeshView: UIViewRepresentable {
 	private let state: MeshGradientState
 	private let subdivisions: Int
     private let grainAlpha: Float
+    private let colorSpace: CGColorSpace?
 	
 	public init(initialGrid: Grid<ControlPoint>,
 				animatorConfiguration: MeshAnimator.Configuration,
 				grainAlpha: Float = MeshGradientDefaults.grainAlpha,
-				subdivisions: Int = MeshGradientDefaults.subdivisions) {
+				subdivisions: Int = MeshGradientDefaults.subdivisions,
+                colorSpace: CGColorSpace? = nil) {
 		self.state = .animated(initial: initialGrid, animatorConfiguration: animatorConfiguration)
         self.grainAlpha = grainAlpha
 		self.subdivisions = subdivisions
+        self.colorSpace = colorSpace
 	}
 	
 	public init(grid: Grid<ControlPoint>,
 				grainAlpha: Float = MeshGradientDefaults.grainAlpha,
-				subdivisions: Int = MeshGradientDefaults.subdivisions) {
+				subdivisions: Int = MeshGradientDefaults.subdivisions,
+                colorSpace: CGColorSpace? = nil) {
 		self.state = .static(grid: grid)
 		self.grainAlpha = grainAlpha
 		self.subdivisions = subdivisions
+        self.colorSpace = colorSpace
 	}
 	
 	public func makeUIView(context: Context) -> MTKView {
 		let view = MTKView(frame: .zero, device: MTLCreateSystemDefaultDevice())
+        view.colorspace = colorSpace
         let dataProvider = state.createDataProvider()
         context.coordinator.renderer = .init(metalKitView: view, meshDataProvider: dataProvider, grainAlpha: grainAlpha, subdivisions: subdivisions)
 		
@@ -90,6 +96,7 @@ public struct MeshView: UIViewRepresentable {
 		context.coordinator.renderer.mtkView(view, drawableSizeWillChange: view.drawableSize)
 		context.coordinator.renderer.subdivisions = subdivisions
         context.coordinator.renderer.grainAlpha = grainAlpha
+        view.colorspace = colorSpace
 	}
 	
 	public func makeCoordinator() -> Coordinator {
@@ -111,26 +118,32 @@ public struct MeshView: NSViewRepresentable {
 	private let state: MeshGradientState
 	private let subdivisions: Int
 	private let grainAlpha: Float
+    private let colorSpace: CGColorSpace?
 	
 	public init(initialGrid: Grid<ControlPoint>,
 				animatorConfiguration: MeshAnimator.Configuration,
 				grainAlpha: Float = MeshGradientDefaults.grainAlpha,
-				subdivisions: Int = MeshGradientDefaults.subdivisions) {
+				subdivisions: Int = MeshGradientDefaults.subdivisions,
+                colorSpace: CGColorSpace? = nil) {
 		self.state = .animated(initial: initialGrid, animatorConfiguration: animatorConfiguration)
 		self.grainAlpha = grainAlpha
 		self.subdivisions = subdivisions
+        self.colorSpace = colorSpace
 	}
 	
 	public init(grid: Grid<ControlPoint>,
 				grainAlpha: Float = MeshGradientDefaults.grainAlpha,
-				subdivisions: Int = MeshGradientDefaults.subdivisions) {
+				subdivisions: Int = MeshGradientDefaults.subdivisions,
+                colorSpace: CGColorSpace? = nil) {
 		self.state = .static(grid: grid)
 		self.grainAlpha = grainAlpha
 		self.subdivisions = subdivisions
+        self.colorSpace = colorSpace
 	}
 	
 	public func makeNSView(context: Context) -> MTKView {
 		let view = MTKView(frame: .zero, device: MTLCreateSystemDefaultDevice())
+        view.colorspace = colorSpace
         let dataProvider = state.createDataProvider()
 		context.coordinator.renderer = .init(metalKitView: view, meshDataProvider: dataProvider, grainAlpha: grainAlpha, subdivisions: subdivisions)
 		
@@ -168,6 +181,7 @@ public struct MeshView: NSViewRepresentable {
 		context.coordinator.renderer.mtkView(view, drawableSizeWillChange: view.drawableSize)
 		context.coordinator.renderer.subdivisions = subdivisions
         context.coordinator.renderer.grainAlpha = grainAlpha
+        view.colorspace = colorSpace
 	}
 	
 	public func makeCoordinator() -> Coordinator {
