@@ -58,7 +58,6 @@ public struct MeshView: UIViewRepresentable {
 	
 	public func makeUIView(context: Context) -> MTKView {
 		let view = MTKView(frame: .zero, device: MTLCreateSystemDefaultDevice())
-        view.colorspace = colorSpace
         let dataProvider = state.createDataProvider()
         context.coordinator.renderer = .init(metalKitView: view, meshDataProvider: dataProvider, grainAlpha: grainAlpha, subdivisions: subdivisions)
 		
@@ -96,7 +95,6 @@ public struct MeshView: UIViewRepresentable {
 		context.coordinator.renderer.mtkView(view, drawableSizeWillChange: view.drawableSize)
 		context.coordinator.renderer.subdivisions = subdivisions
         context.coordinator.renderer.grainAlpha = grainAlpha
-        view.colorspace = colorSpace
 	}
 	
 	public func makeCoordinator() -> Coordinator {
