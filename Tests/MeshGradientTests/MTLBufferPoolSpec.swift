@@ -5,7 +5,7 @@ import Metal
 
 class MTLBufferPoolSpec: QuickSpec {
     override class func spec() {
-        fdescribe("MTLBufferPool") {
+        describe("MTLBufferPool") {
             var device: MTLDevice!
             var bufferPool: MTLBufferPool!
             
