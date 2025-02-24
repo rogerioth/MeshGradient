@@ -33,8 +33,8 @@ let package = Package(
                 "MTLDrawMeshTriangles.metal"
             ],
             resources: [
-                .copy("DummyResources/"),
-                .process("Resources/default.metallib")
+                .copy("DummyResources/")//, to compile and test, uncomment these
+                // .process("Resources/default.metallib")
             ]
         ),
 		.target(name: "MeshGradientCHeaders"),
