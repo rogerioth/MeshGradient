@@ -34,18 +34,6 @@ let package = Package(
             ],
             resources: [
                 .copy("DummyResources/"),
-                // Compiled Metal files from root
-                // .process("MTLComputeHermitPatchMatrix.air"),
-                // .process("MTLComputeMeshTrianglePrimitives.air"),
-                // .process("MTLComputeNoise.air"),
-                // .process("MTLComputeShuffleCoefficients.air"),
-                // .process("MTLDrawMeshTriangles.air"),
-                // Resources directory Metal files
-                .process("Resources/MTLComputeHermitPatchMatrix.metal"),
-                .process("Resources/MTLComputeMeshTrianglePrimitives.metal"),
-                .process("Resources/MTLComputeNoise.metal"),
-                .process("Resources/MTLComputeShuffleCoefficients.metal"),
-                .process("Resources/MTLDrawMeshTriangles.metal"),
                 .process("Resources/default.metallib")
             ]
         ),
