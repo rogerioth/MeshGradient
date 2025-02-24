@@ -21,7 +21,7 @@ Add the following to your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/rogerioth/MeshGradient", from: "1.0.9")
+    .package(url: "https://github.com/rogerioth/MeshGradient", from: "1.1.1")
 ]
 ```
 

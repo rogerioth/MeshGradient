@@ -35,11 +35,11 @@ let package = Package(
             resources: [
                 .copy("DummyResources/"),
                 // Compiled Metal files from root
-                .process("MTLComputeHermitPatchMatrix.air"),
-                .process("MTLComputeMeshTrianglePrimitives.air"),
-                .process("MTLComputeNoise.air"),
-                .process("MTLComputeShuffleCoefficients.air"),
-                .process("MTLDrawMeshTriangles.air"),
+                // .process("MTLComputeHermitPatchMatrix.air"),
+                // .process("MTLComputeMeshTrianglePrimitives.air"),
+                // .process("MTLComputeNoise.air"),
+                // .process("MTLComputeShuffleCoefficients.air"),
+                // .process("MTLDrawMeshTriangles.air"),
                 // Resources directory Metal files
                 .process("Resources/MTLComputeHermitPatchMatrix.metal"),
                 .process("Resources/MTLComputeMeshTrianglePrimitives.metal"),
