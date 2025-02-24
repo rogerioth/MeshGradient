@@ -1,4 +1,3 @@
-
 import Foundation
 
 import simd
@@ -19,13 +18,13 @@ public enum MeshGenerator {
 		
 		for y in 0 ..< grid.height {
 			for x in 0 ..< grid.width {
-				generateControlPoint(in: &grid, x: x, y: y)
+				generateControlPoint(in: &grid, at: x, y: y, color: colorDistribution[x, y])
 			}
 		}
 		return grid
 	}
 	
-	private static func generateControlPoint(in grid: inout Grid<ControlPoint>, x: Int, y: Int) {
+	private static func generateControlPoint(in grid: inout Grid<ControlPoint>, at x: Int, y: Int, color: Color) {
 		grid[x, y].location = simd_float2(
 			lerp(Float(x) / Float(grid.width  - 1), -1, 1),
 			lerp(Float(y) / Float(grid.height - 1), -1, 1)
@@ -33,6 +32,8 @@ public enum MeshGenerator {
 		
 		grid[x, y].uTangent.x = 2 / Float(grid.width  - 1)
 		grid[x, y].vTangent.y = 2 / Float(grid.height - 1)
+		
+		grid[x, y].color = color  // Set the color from the distribution
 	}
 }
 
